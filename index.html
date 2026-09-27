@@ -3598,7 +3598,7 @@ BRAND_OWNER="ALL STORE PROJECT"
           };
 
           const apiKey = this.config.apiKey || "";
-          const modelName = this.config.aiModel || "gemini-3-flash-preview";
+          const modelName = this.config.aiModel || "gemini-3.8-flash";
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
           const response = await fetch(apiUrl, {
