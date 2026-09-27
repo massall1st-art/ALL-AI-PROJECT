@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ALL AI — WhatsApp Assistant</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              black: '#05070a',
+              dark: '#0a0f14',
+              card: 'rgba(13, 22, 28, 0.75)',
+              border: '#112921',
+              neon: '#00ff88',
+              emerald: '#059669',
+              darkgreen: '#022c22',
+              glow: '#00ff88',
+            }
+          },
+          fontFamily: {
+            mono: ['Fira Code', 'JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 12s linear infinite',
+            'glow-pulse': 'glowPulse 2s infinite ease-in-out',
+            'float': 'float 4s ease-in-out infinite',
+          },
+          keyframes: {
+            glowPulse: {
+              '0%, 100%': { boxShadow: '0 0 15px rgba(0,255,136,0.3), inset 0 0 10px rgba(0,255,136,0.2)' },
+              '50%': { boxShadow: '0 0 30px rgba(0,255,136,0.7), inset 0 0 20px rgba(0,255,136,0.4)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Three.js for 3D Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Marked.js for Markdown Processing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js for Code Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+  <style>
+    :root {
+      --cyber-color: #00ff88;
+      --cyber-color-dark: #022c22;
+      --cyber-glow: rgba(0, 255, 136, 0.4);
+      --cyber-glow-heavy: rgba(0, 255, 136, 0.7);
+      --cyber-border: rgba(0, 255, 136, 0.25);
+    }
+
+    .theme-pink {
+      --cyber-color: #ff007f;
+      --cyber-color-dark: #2c0218;
+      --cyber-glow: rgba(255, 0, 127, 0.4);
+      --cyber-glow-heavy: rgba(255, 0, 127, 0.7);
+      --cyber-border: rgba(255, 0, 127, 0.25);
+    }
+
+    .theme-cyan {
+      --cyber-color: #00f0ff;
+      --cyber-color-dark: #02232c;
+      --cyber-glow: rgba(0, 240, 255, 0.4);
+      --cyber-glow-heavy: rgba(0, 240, 255, 0.7);
+      --cyber-border: rgba(0, 240, 255, 0.25);
+    }
+
+    .theme-amber {
+      --cyber-color: #ffaa00;
+      --cyber-color-dark: #2c1a02;
+      --cyber-glow: rgba(255, 170, 0, 0.4);
+      --cyber-glow-heavy: rgba(255, 170, 0, 0.7);
+      --cyber-border: rgba(255, 170, 0, 0.25);
+    }
+
+    .theme-purple {
+      --cyber-color: #a855f7;
+      --cyber-color-dark: #1d022c;
+      --cyber-glow: rgba(168, 85, 247, 0.4);
+      --cyber-glow-heavy: rgba(168, 85, 247, 0.7);
+      --cyber-border: rgba(168, 85, 247, 0.25);
+    }
+
+    /* Dynamic CSS Color Override */
+    .text-cyber-neon { color: var(--cyber-color) !important; }
+    .bg-cyber-neon { background-color: var(--cyber-color) !important; }
+    .border-cyber-neon { border-color: var(--cyber-color) !important; }
+    .border-cyber-neon\/40 { border-color: var(--cyber-border) !important; }
+
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #05070a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--cyber-color-dark);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cyber-color);
+    }
+
+    /* Glassmorphism Styles */
+    .glass-card {
+      background: rgba(10, 18, 22, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--cyber-border);
+    }
+    
+    .glass-card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: var(--cyber-color);
+      box-shadow: 0 0 20px var(--cyber-glow);
+    }
+
+    /* Cyberpunk Scanlines overlay toggle */
+    .scanlines-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.25) 50%,
+        rgba(0, 0, 0, 0.25)
+      );
+      background-size: 100% 4px;
+      opacity: 0.6;
+    }
+
+    /* Cyber Corner Frame Decorations */
+    .cyber-hud-box {
+      position: relative;
+    }
+    .cyber-hud-box::before, .cyber-hud-box::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-color: var(--cyber-color);
+      pointer-events: none;
+    }
+    .cyber-hud-box::before {
+      top: 0; left: 0;
+      border-top: 2px solid var(--cyber-color);
+      border-left: 2px solid var(--cyber-color);
+    }
+    .cyber-hud-box::after {
+      bottom: 0; right: 0;
+      border-bottom: 2px solid var(--cyber-color);
+      border-right: 2px solid var(--cyber-color);
+    }
+
+    /* Avatar Neon Rotating Ring */
+    .neon-ring-container {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .neon-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0%, var(--cyber-color) 50%, var(--cyber-color-dark) 80%, transparent 100%);
+      animation: rotateRing 4s linear infinite;
+      filter: blur(1px);
+    }
+
+    @keyframes rotateRing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Canvas overlay gradient */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Markdown styling inside message bubbles */
+    .markdown-content p {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+    .markdown-content p:last-child {
+      margin-bottom: 0;
+    }
+    .markdown-content code {
+      background: var(--cyber-border);
+      color: var(--cyber-color);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    .markdown-content pre {
+      background: #060d11 !important;
+      border: 1px solid var(--cyber-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin: 0.75rem 0;
+      overflow-x: auto;
+      position: relative;
+    }
+    .markdown-content ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content ol {
+      list-style-type: decimal;
+      padding-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+
+<body class="bg-cyber-black text-gray-100 font-sans antialiased min-h-screen overflow-x-hidden selection:bg-cyber-neon selection:text-black transition-colors duration-500">
+
+  <div id="scanlines" class="scanlines-overlay"></div>
+  <div id="canvas-container"></div>
+
+  <!-- Main Container -->
+  <div id="app" class="relative z-10 min-h-screen flex flex-col justify-between">
+
+    <header class="border-b border-emerald-900/40 glass-card sticky top-0 z-30 px-4 py-3">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        
+        <!-- Brand & Profile Header -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showLandingOrChat()">
+          <div class="neon-ring-container w-10 h-10">
+            <div class="neon-ring"></div>
+            <img id="header-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80" alt="AI Avatar" class="w-10 h-10 rounded-full object-cover relative z-10 border border-cyber-black">
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 id="header-name" class="font-bold text-white tracking-wide text-base">ALL AI</h1>
+              <span id="header-status-badge" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-cyber-neon border border-cyber-neon/40">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyber-neon animate-pulse mr-1"></span>
+                ONLINE
+              </span>
+            </div>
+            <p id="header-desc" class="text-xs text-cyber-neon/80 truncate max-w-[180px] sm:max-w-xs">Your Smart WhatsApp Assistant</p>
+          </div>
+        </div>
+
+        <!-- Header Controls with Quick Theme Switcher -->
+        <div class="flex items-center space-x-2 relative">
+          <!-- Cyber Theme Quick Picker Button -->
+          <button onclick="app.toggleThemeDropdown()" title="Switch Cyberpunk 3D Theme" class="p-2 rounded-lg bg-emerald-950/60 border border-cyber-neon/40 text-cyber-neon hover:bg-cyber-neon hover:text-black transition shadow-[0_0_10px_var(--cyber-glow)]">
+            <i class="fa-solid fa-palette text-sm"></i>
+          </button>
+
+          <!-- Cyberpunk Quick Theme Dropdown Menu -->
+          <div id="theme-dropdown" class="hidden absolute top-12 right-12 w-52 glass-card rounded-xl p-2 z-50 border border-cyber-neon/50 shadow-2xl space-y-1 text-xs">
+            <p class="text-[10px] uppercase font-mono text-cyber-neon px-2 py-1 border-b border-emerald-900/40">Cyber 3D Colors</p>
+            <button onclick="app.setCyberTheme('green')" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between hover:bg-emerald-950/70 text-emerald-400">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#00ff88]"></span> Matrix Green</span>
+              <i class="fa-solid fa-check opacity-0 theme-chk-green"></i>
+            </button>
+            <button onclick="app.setCyberTheme('pink')" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between hover:bg-emerald-950/70 text-pink-400">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#ff007f]"></span> Neon Pink</span>
+              <i class="fa-solid fa-check opacity-0 theme-chk-pink"></i>
+            </button>
+            <button onclick="app.setCyberTheme('cyan')" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between hover:bg-emerald-950/70 text-cyan-400">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#00f0ff]"></span> Electric Cyan</span>
+              <i class="fa-solid fa-check opacity-0 theme-chk-cyan"></i>
+            </button>
+            <button onclick="app.setCyberTheme('amber')" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between hover:bg-emerald-950/70 text-amber-400">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#ffaa00]"></span> Synthwave Amber</span>
+              <i class="fa-solid fa-check opacity-0 theme-chk-amber"></i>
+            </button>
+            <button onclick="app.setCyberTheme('purple')" class="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between hover:bg-emerald-950/70 text-purple-400">
+              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#a855f7]"></span> Ultraviolet Void</span>
+              <i class="fa-solid fa-check opacity-0 theme-chk-purple"></i>
+            </button>
+
+            <p class="text-[10px] uppercase font-mono text-cyber-neon px-2 py-1 mt-2 border-t border-b border-emerald-900/40">Mode Model 3D</p>
+            <div class="grid grid-cols-2 gap-1 pt-1">
+              <button onclick="app.set3DMode('knot')" class="text-left px-2 py-1.5 rounded hover:bg-emerald-950/80 text-[11px] text-gray-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-gem text-cyber-neon"></i> Knot
+              </button>
+              <button onclick="app.set3DMode('sphere')" class="text-left px-2 py-1.5 rounded hover:bg-emerald-950/80 text-[11px] text-gray-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-globe text-cyber-neon"></i> Sphere
+              </button>
+              <button onclick="app.set3DMode('cubes')" class="text-left px-2 py-1.5 rounded hover:bg-emerald-950/80 text-[11px] text-gray-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-cubes text-cyber-neon"></i> Cubes
+              </button>
+              <button onclick="app.set3DMode('warp')" class="text-left px-2 py-1.5 rounded hover:bg-emerald-950/80 text-[11px] text-gray-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-rocket text-cyber-neon"></i> Warp
+              </button>
+            </div>
+          </div>
+
+          <!-- Cyber Audio SFX Toggle -->
+          <button id="btn-audio-toggle" onclick="app.toggleAudioSFX()" title="Toggle Cyber Sound Effects" class="p-2 rounded-lg bg-emerald-950/60 border border-cyber-neon/40 text-cyber-neon hover:bg-cyber-neon hover:text-black transition">
+            <i class="fa-solid fa-volume-xmark text-sm"></i>
+          </button>
+
+          <!-- Cyber Developer Social Media Button -->
+          <button onclick="app.openSocialsModal()" title="Media Sosial Developer" class="p-2 rounded-lg bg-emerald-950/60 border border-cyber-neon/40 text-cyber-neon hover:bg-cyber-neon hover:text-black transition shadow-[0_0_10px_var(--cyber-glow)]">
+            <i class="fa-solid fa-share-nodes text-sm"></i>
+          </button>
+
+          <button id="btn-toggle-sidebar" onclick="app.toggleSidebar()" class="lg:hidden p-2 rounded-lg bg-emerald-950/60 border border-emerald-800/50 text-cyber-neon hover:bg-emerald-900/60 transition">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <button onclick="app.createNewChat()" title="New Chat" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 border border-cyber-neon/40 text-cyber-neon hover:bg-cyber-neon hover:text-black transition text-xs font-semibold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Chat Baru</span>
+          </button>
+          <button onclick="app.openAdminAuthModal()" title="Developer / Admin Panel" class="p-2 rounded-lg bg-emerald-950/60 border border-emerald-800/50 text-cyber-neon hover:bg-emerald-900/50 transition">
+            <i class="fa-solid fa-user-gear"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-grow flex relative max-w-7xl w-full mx-auto overflow-hidden">
+
+      <!-- LANDING PAGE SECTION -->
+      <section id="view-landing" class="w-full flex flex-col items-center justify-center p-6 text-center my-auto min-h-[80vh]">
+        
+        <div class="mb-4">
+          <span class="inline-block bg-black/60 border border-cyber-neon text-cyber-neon text-xs px-3 py-1 rounded-full font-mono font-bold animate-pulse shadow-[0_0_12px_rgba(0,255,136,0.3)]">
+            v2.5 Hybrid
+          </span>
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-cyber-neon tracking-tight mb-3">
+          ALL AI
+        </h1>
+        <p class="text-cyber-neon font-mono text-sm sm:text-base tracking-widest uppercase mb-4">
+          Smart AI Assistant
+        </p>
+        <p class="text-gray-400 max-w-md text-sm sm:text-base mb-8 leading-relaxed">
+          Asisten cerdas serba bisa yang responsif, dibekali kemampuan coding, analisis data, pembuatan konten, dan pemecahan masalah secara terstruktur.
+        </p>
+
+        <!-- Feature Cards Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl w-full mb-8">
+          <div class="glass-card cyber-hud-box p-3 rounded-xl text-left border-emerald-900/50">
+            <i class="fa-solid fa-code text-cyber-neon mb-1 text-lg"></i>
+            <h3 class="text-xs font-bold text-white">Full Stack Code</h3>
+            <p class="text-[11px] text-gray-400">HTML, JS, Python & logic</p>
+          </div>
+          <div class="glass-card cyber-hud-box p-3 rounded-xl text-left border-emerald-900/50">
+            <i class="fa-solid fa-cube text-cyber-neon mb-1 text-lg"></i>
+            <h3 class="text-xs font-bold text-white">3D Cyber Engine</h3>
+            <p class="text-[11px] text-gray-400">Interaktif & Holografik</p>
+          </div>
+          <div class="glass-card cyber-hud-box p-3 rounded-xl text-left border-emerald-900/50">
+            <i class="fa-solid fa-bolt text-cyber-neon mb-1 text-lg"></i>
+            <h3 class="text-xs font-bold text-white">Respon Cepat</h3>
+            <p class="text-[11px] text-gray-400">Sistem real-time ultra fast</p>
+          </div>
+          <div class="glass-card cyber-hud-box p-3 rounded-xl text-left border-emerald-900/50">
+            <i class="fa-solid fa-shield-halved text-cyber-neon mb-1 text-lg"></i>
+            <h3 class="text-xs font-bold text-white">Aman & Privat</h3>
+            <p class="text-[11px] text-gray-400">Proses data terenkripsi</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-sm">
+          <button onclick="app.startChatSession()" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-cyber-neon text-black font-bold tracking-wide hover:brightness-110 transition shadow-[0_0_25px_rgba(0,255,136,0.4)] flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-comments text-lg"></i>
+            <span>START CHAT</span>
+          </button>
+          <button onclick="app.openAdminAuthModal()" class="w-full py-3.5 px-6 rounded-xl glass-card border border-cyber-neon/40 text-cyber-neon font-bold tracking-wide hover:bg-emerald-950/60 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-terminal text-lg"></i>
+            <span>DEVELOPER PANEL</span>
+          </button>
+        </div>
+
+        <!-- Social Media Quick Bar on Landing Page -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span class="text-xs font-mono text-gray-400">Media Sosial Dev:</span>
+          <div id="landing-social-links" class="flex items-center space-x-2">
+            <!-- Dynamic Social Icons rendered via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT & SIDEBAR SECTION -->
+      <section id="view-chat" class="hidden w-full flex-grow flex overflow-hidden h-[calc(100vh-65px)]">
+
+        <!-- Overlay backdrop for mobile drawer -->
+        <div id="sidebar-backdrop" onclick="app.toggleSidebar()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 hidden lg:hidden"></div>
+
+        <aside id="chat-sidebar" class="fixed lg:static inset-y-0 left-0 z-20 w-72 bg-cyber-dark/95 border-r border-emerald-900/40 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+          
+          <div class="p-4 border-b border-emerald-900/40 flex items-center justify-between">
+            <button onclick="app.createNewChat()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-950 border border-cyber-neon/40 text-cyber-neon hover:bg-cyber-neon hover:text-black font-semibold text-xs flex items-center justify-center space-x-2 transition shadow-[0_0_15px_rgba(0,255,136,0.15)]">
+              <i class="fa-solid fa-plus"></i>
+              <span>+ Chat Baru</span>
+            </button>
+          </div>
+
+          <!-- History Chats List -->
+          <div class="flex-1 overflow-y-auto p-3 space-y-1" id="chat-history-list">
+            <!-- Dynamic elements will be inserted here -->
+          </div>
+
+          <!-- Sidebar Footer Controls -->
+          <div class="p-3 border-t border-emerald-900/40 space-y-2 text-xs">
+            <button onclick="app.clearCurrentChat()" class="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-950/30 transition">
+              <i class="fa-solid fa-trash-can w-4"></i>
+              <span>Bersihkan Chat Ini</span>
+            </button>
+            <button onclick="app.openAdminAuthModal()" class="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-400 hover:text-cyber-neon hover:bg-emerald-950/40 transition">
+              <i class="fa-solid fa-sliders w-4"></i>
+              <span>Pengaturan Admin</span>
+            </button>
+            
+            <div class="pt-2 border-t border-emerald-900/30 text-center space-y-2">
+              <button onclick="app.openSocialsModal()" class="w-full py-1.5 px-3 rounded-lg bg-emerald-950/80 border border-cyber-neon/30 text-cyber-neon hover:bg-cyber-neon hover:text-black font-mono text-[11px] flex items-center justify-center gap-2 transition shadow-[0_0_10px_rgba(0,255,136,0.1)]">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span>Sosial Media Developer</span>
+              </button>
+              <p class="text-[10px] uppercase font-mono tracking-wider text-cyber-neon/80 font-semibold drop-shadow-[0_0_8px_rgba(0,255,136,0.5)] cursor-pointer hover:underline" onclick="app.openSocialsModal()">
+                DEVELOPER BY ALL STORE PROJECT
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col h-full bg-cyber-black/50 relative overflow-hidden">
+
+          <!-- Messages Container -->
+          <div id="messages-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+
+            <!-- Welcome Screen Card (Shown when conversation is empty) -->
+            <div id="welcome-screen" class="max-w-xl mx-auto my-8 p-6 rounded-2xl glass-card text-center space-y-4">
+              <div class="w-16 h-16 mx-auto rounded-full bg-emerald-950 border border-cyber-neon/50 flex items-center justify-center text-cyber-neon text-2xl shadow-[0_0_20px_rgba(0,255,136,0.2)]">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <h2 class="text-xl font-bold text-white">Hello 👋, I'm <span class="text-cyber-neon">ALL AI</span></h2>
+              <p class="text-xs sm:text-sm text-gray-300">
+                Asisten cerdas WhatsApp Anda. Silakan ketik pertanyaan atau pilih rekomendasi di bawah ini:
+              </p>
+
+              <!-- Suggestion Chips -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left pt-2">
+                <button onclick="app.useSuggestion('💻 Bantu saya membuat script HTML & CSS untuk landing page')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span class="text-base">💻</span>
+                  <span>Bantu saya buat script code HTML/CSS</span>
+                </button>
+                <button onclick="app.useSuggestion('🧠 Jelaskan cara kerja Artificial Intelligence secara sederhana')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span class="text-base">🧠</span>
+                  <span>Jelaskan konsep AI sederhana</span>
+                </button>
+                <button onclick="app.useSuggestion('✍️ Tuliskan draf pesan WhatsApp promosi produk yang menarik')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span class="text-base">✍️</span>
+                  <span>Buat draf pesan promosi WhatsApp</span>
+                </button>
+                <button onclick="app.useSuggestion('📚 Berikan tips belajar matematika dan logika cepat')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span class="text-base">📚</span>
+                  <span>Tips belajar logika & matematika</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Typing Indicator -->
+          <div id="typing-indicator" class="hidden px-6 py-2 text-xs text-cyber-neon flex items-center space-x-2 font-mono">
+            <span class="w-2 h-2 rounded-full bg-cyber-neon animate-bounce"></span>
+            <span class="w-2 h-2 rounded-full bg-cyber-neon animate-bounce" style="animation-delay: 0.2s"></span>
+            <span class="w-2 h-2 rounded-full bg-cyber-neon animate-bounce" style="animation-delay: 0.4s"></span>
+            <span class="text-gray-400 ml-2">ALL AI sedang mengetik...</span>
+          </div>
+
+          <div class="p-3 sm:p-4 border-t border-emerald-900/40 glass-card">
+            <form id="chat-form" onsubmit="app.handleSendMessage(event)" class="flex items-end space-x-2 max-w-4xl mx-auto">
+              
+              <div class="relative flex-1">
+                <textarea id="chat-input" rows="1" placeholder="Ketik pertanyaan Anda di sini..." onkeydown="app.handleKeyDown(event)" class="w-full bg-cyber-dark/90 border border-emerald-800/60 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon resize-none max-h-32 min-h-[46px]"></textarea>
+              </div>
+
+              <button type="submit" id="btn-send" class="h-[46px] px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-cyber-neon text-black font-bold hover:brightness-110 transition flex items-center justify-center space-x-1 shadow-[0_0_15px_rgba(0,255,136,0.3)]">
+                <i class="fa-solid fa-paper-plane text-base"></i>
+              </button>
+            </form>
+            
+            <div class="text-center mt-2">
+              <span class="text-[10px] uppercase tracking-widest text-cyber-neon font-mono opacity-80">
+                DEVELOPER BY ALL STORE PROJECT
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ADMIN AUTH MODAL -->
+  <div id="modal-admin-auth" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card w-full max-w-md rounded-2xl p-6 border-cyber-neon/40 space-y-4">
+      <div class="flex items-center justify-between border-b border-emerald-900/40 pb-3">
+        <h3 class="font-bold text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-cyber-neon"></i>
+          Admin Authentication
+        </h3>
+        <button onclick="app.closeAdminAuthModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <p class="text-xs text-gray-300">Masukkan passcode admin untuk membuka Developer Panel & Pengaturan API:</p>
+
+      <div>
+        <label class="block text-xs font-mono text-cyber-neon mb-1.5">Passcode Admin</label>
+        <input type="password" id="admin-passcode" placeholder="Masukkan Passcode Admin..." onkeydown="if(event.key==='Enter') app.verifyAdminPasscode()" class="w-full bg-cyber-dark/90 border border-emerald-800/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-neon">
+      </div>
+
+      <div id="admin-auth-error" class="hidden text-xs text-red-400 font-mono bg-red-950/40 border border-red-800/50 p-2.5 rounded-lg"></div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="app.closeAdminAuthModal()" class="px-4 py-2 rounded-xl text-xs text-gray-400 hover:text-white transition">Batal</button>
+        <button onclick="app.verifyAdminPasscode()" class="px-4 py-2 rounded-xl bg-cyber-neon text-black font-bold text-xs hover:brightness-110 transition">Masuk Panel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEVELOPER SOCIAL MEDIA MODAL -->
+  <div id="modal-developer-socials" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card w-full max-w-md rounded-2xl p-6 border-cyber-neon/40 space-y-5 cyber-hud-box">
+      <div class="flex items-center justify-between border-b border-emerald-900/40 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-cyber-neon/40 flex items-center justify-center text-cyber-neon text-lg shadow-[0_0_12px_var(--cyber-glow)]">
+            <i class="fa-solid fa-code-branch"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-base">Developer Social Media</h3>
+            <p class="text-[11px] text-cyber-neon/90 font-mono">ALL STORE PROJECT</p>
+          </div>
+        </div>
+        <button onclick="app.closeSocialsModal()" class="text-gray-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-300">
+        Hubungi atau ikuti saluran resmi developer untuk informasi pembaruan, layanan bantuan, dan kolaborasi project:
+      </p>
+
+      <!-- Dynamic Social Media Links -->
+      <div id="social-modal-links-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <!-- Rendered dynamically in JS -->
+      </div>
+
+      <div class="pt-3 border-t border-emerald-900/40 text-center">
+        <p class="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+          © ALL STORE PROJECT — Official Contact & Channels
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-admin-dashboard" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 overflow-y-auto hidden">
+    <div class="max-w-5xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col justify-between">
+      
+      <div>
+        <!-- Admin Dashboard Header -->
+        <div class="flex items-center justify-between border-b border-emerald-900/60 pb-4 mb-6">
+          <div class="flex items-center space-x-3">
+            <div class="p-2.5 rounded-xl bg-emerald-950 border border-cyber-neon/40 text-cyber-neon">
+              <i class="fa-solid fa-sliders text-xl"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">ALL AI — Developer & Admin Panel</h2>
+              <p class="text-xs text-emerald-400/80">Sistem Manajemen Pengaturan & API Configuration</p>
+            </div>
+          </div>
+          <button onclick="app.closeAdminDashboard()" class="px-4 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-xs text-cyber-neon hover:bg-cyber-neon hover:text-black transition">
+            <i class="fa-solid fa-xmark mr-1"></i> Tutup Panel
+          </button>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="flex border-b border-emerald-900/40 space-x-4 mb-6 overflow-x-auto text-sm font-semibold">
+          <button id="tab-btn-overview" onclick="app.switchAdminTab('overview')" class="pb-2 border-b-2 border-cyber-neon text-cyber-neon px-1 whitespace-nowrap">
+            <i class="fa-solid fa-chart-pie mr-1"></i> Ringkasan
+          </button>
+          <button id="tab-btn-ai" onclick="app.switchAdminTab('ai')" class="pb-2 border-b-2 border-transparent text-gray-400 hover:text-cyber-neon px-1 whitespace-nowrap">
+            <i class="fa-solid fa-robot mr-1"></i> AI Settings
+          </button>
+          <button id="tab-btn-profile" onclick="app.switchAdminTab('profile')" class="pb-2 border-b-2 border-transparent text-gray-400 hover:text-cyber-neon px-1 whitespace-nowrap">
+            <i class="fa-solid fa-id-card mr-1"></i> Profil AI
+          </button>
+          <button id="tab-btn-appearance" onclick="app.switchAdminTab('appearance')" class="pb-2 border-b-2 border-transparent text-gray-400 hover:text-cyber-neon px-1 whitespace-nowrap">
+            <i class="fa-solid fa-palette mr-1"></i> Tampilan 3D
+          </button>
+          <button id="tab-btn-developer" onclick="app.switchAdminTab('developer')" class="pb-2 border-b-2 border-transparent text-gray-400 hover:text-cyber-neon px-1 whitespace-nowrap">
+            <i class="fa-solid fa-code mr-1"></i> Env & Documentation
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 1: OVERVIEW -->
+        <div id="admin-tab-overview" class="space-y-6">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="glass-card p-4 rounded-xl">
+              <p class="text-xs text-gray-400">Total Pengguna</p>
+              <h3 class="text-2xl font-bold text-white mt-1">1,248</h3>
+              <span class="text-[10px] text-cyber-neon">● Aktif Hari Ini</span>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <p class="text-xs text-gray-400">Total Percakapan</p>
+              <h3 id="stat-conversations" class="text-2xl font-bold text-white mt-1">0</h3>
+              <span class="text-[10px] text-cyber-neon">Sesi tersimpan</span>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <p class="text-xs text-gray-400">Total Pesan</p>
+              <h3 id="stat-messages" class="text-2xl font-bold text-white mt-1">0</h3>
+              <span class="text-[10px] text-cyber-neon">Public Mode</span>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <p class="text-xs text-gray-400">Status Server System</p>
+              <h3 class="text-lg font-bold text-cyber-neon mt-1">OPTIMAL</h3>
+              <span class="text-[10px] text-gray-400">Response 120ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: AI SETTINGS -->
+        <div id="admin-tab-ai" class="hidden space-y-4 max-w-2xl">
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">Passcode Admin Baru (Keamanan Panel)</label>
+            <input type="password" id="input-new-passcode" placeholder="Masukkan Passcode Admin baru jika ingin mengubah..." class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+            <p class="text-[11px] text-gray-400 mt-1">Kosongkan jika tidak ingin mengganti passcode admin.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">Gemini API Key (Opsional / Override)</label>
+            <input type="password" id="input-api-key" placeholder="Masukkan Gemini API Key jika ingin mengganti default" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+            <p class="text-[11px] text-gray-400 mt-1">Secara default, aplikasi telah terhubung ke Gemini API Engine Canvas.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">AI Model Provider</label>
+            <select id="input-ai-model" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+              <option value="gemini-3-flash-preview">gemini-3-flash-preview (Rekomendasi Cepat)</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Standard)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">System Prompt / Character Persona</label>
+            <textarea id="input-system-prompt" rows="4" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyber-neon">You are ALL AI, an intelligent, helpful, polite WhatsApp Assistant created by ALL STORE PROJECT. You answer user queries clearly and concisely with markdown formatting.</textarea>
+          </div>
+
+          <button onclick="app.saveAISettings()" class="px-5 py-2.5 rounded-xl bg-cyber-neon text-black font-bold text-xs hover:brightness-110">
+            Simpan Pengaturan AI
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 3: PROFILE SETTINGS -->
+        <div id="admin-tab-profile" class="hidden space-y-4 max-w-2xl">
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">Nama AI</label>
+            <input type="text" id="input-ai-name" value="ALL AI" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">Deskripsi AI</label>
+            <input type="text" id="input-ai-desc" value="Your Smart WhatsApp Assistant" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-cyber-neon mb-1">URL Foto Profil Avatar</label>
+            <input type="text" id="input-ai-avatar" value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80" class="w-full bg-cyber-dark border border-emerald-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-cyber-neon">
+          </div>
+
+          <!-- Social Links Inputs in Admin Panel -->
+          <div class="pt-3 border-t border-emerald-900/40 space-y-3">
+            <h4 class="text-xs font-mono text-cyber-neon font-bold uppercase tracking-wider">
+              <i class="fa-solid fa-share-nodes mr-1"></i> Tautan Media Sosial Developer
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label class="block text-gray-400 mb-1">WhatsApp Admin</label>
+                <input type="text" id="input-soc-wa" placeholder="https://wa.me/..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Instagram</label>
+                <input type="text" id="input-soc-ig" placeholder="https://instagram.com/..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Telegram</label>
+                <input type="text" id="input-soc-tg" placeholder="https://t.me/..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">GitHub</label>
+                <input type="text" id="input-soc-gh" placeholder="https://github.com/..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">TikTok</label>
+                <input type="text" id="input-soc-tt" placeholder="https://tiktok.com/@..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+              <div>
+                <label class="block text-gray-400 mb-1">Website Resmi</label>
+                <input type="text" id="input-soc-web" placeholder="https://..." class="w-full bg-cyber-dark border border-emerald-800 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyber-neon">
+              </div>
+            </div>
+          </div>
+
+          <button onclick="app.saveProfileSettings()" class="px-5 py-2.5 rounded-xl bg-cyber-neon text-black font-bold text-xs hover:brightness-110">
+            Perbarui Profil & Social Media
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 4: APPEARANCE -->
+        <div id="admin-tab-appearance" class="hidden space-y-4 max-w-2xl">
+          <div class="flex items-center justify-between p-3 glass-card rounded-xl">
+            <div>
+              <h4 class="text-sm font-bold text-white">Background 3D Grid & Core</h4>
+              <p class="text-xs text-gray-400">Aktifkan efek canvas tiga dimensi & Hologram Core</p>
+            </div>
+            <input type="checkbox" id="toggle-3d-bg" checked onchange="app.toggle3DBackground(this.checked)" class="w-5 h-5 accent-cyber-neon rounded">
+          </div>
+
+          <div class="p-4 glass-card rounded-xl space-y-3">
+            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-cube text-cyber-neon"></i> Pilih Model Object 3D Background
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <button onclick="app.set3DMode('knot')" class="p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-gray-200 hover:border-cyber-neon hover:text-cyber-neon font-semibold text-left flex items-center gap-2 transition">
+                <i class="fa-solid fa-gem text-cyber-neon"></i> Torus Knot
+              </button>
+              <button onclick="app.set3DMode('sphere')" class="p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-gray-200 hover:border-cyber-neon hover:text-cyber-neon font-semibold text-left flex items-center gap-2 transition">
+                <i class="fa-solid fa-globe text-cyber-neon"></i> Orbit Sphere
+              </button>
+              <button onclick="app.set3DMode('cubes')" class="p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-gray-200 hover:border-cyber-neon hover:text-cyber-neon font-semibold text-left flex items-center gap-2 transition">
+                <i class="fa-solid fa-cubes text-cyber-neon"></i> Cyber Cubes
+              </button>
+              <button onclick="app.set3DMode('warp')" class="p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-gray-200 hover:border-cyber-neon hover:text-cyber-neon font-semibold text-left flex items-center gap-2 transition">
+                <i class="fa-solid fa-rocket text-cyber-neon"></i> Star Warp
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between p-3 glass-card rounded-xl">
+            <div>
+              <h4 class="text-sm font-bold text-white">Efek Scanlines & CRT Glitch HUD</h4>
+              <p class="text-xs text-gray-400">Tampilkan garis-garis pemindai retro-futuristik</p>
+            </div>
+            <input type="checkbox" id="toggle-scanlines" checked onchange="app.toggleScanlines(this.checked)" class="w-5 h-5 accent-cyber-neon rounded">
+          </div>
+
+          <div class="p-4 glass-card rounded-xl space-y-3">
+            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-palette text-cyber-neon"></i> Pilih Theme Cyberpunk Preset
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+              <button onclick="app.setCyberTheme('green')" class="p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:border-emerald-400 font-bold text-left flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#00ff88]"></span> Matrix Green
+              </button>
+              <button onclick="app.setCyberTheme('pink')" class="p-2.5 rounded-xl border border-pink-500/40 bg-pink-950/40 text-pink-400 hover:border-pink-400 font-bold text-left flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#ff007f]"></span> Neon Pink
+              </button>
+              <button onclick="app.setCyberTheme('cyan')" class="p-2.5 rounded-xl border border-cyan-500/40 bg-cyan-950/40 text-cyan-400 hover:border-cyan-400 font-bold text-left flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#00f0ff]"></span> Electric Cyan
+              </button>
+              <button onclick="app.setCyberTheme('amber')" class="p-2.5 rounded-xl border border-amber-500/40 bg-amber-950/40 text-amber-400 hover:border-amber-400 font-bold text-left flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#ffaa00]"></span> Synthwave Amber
+              </button>
+              <button onclick="app.setCyberTheme('purple')" class="p-2.5 rounded-xl border border-purple-500/40 bg-purple-950/40 text-purple-400 hover:border-purple-400 font-bold text-left flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#a855f7]"></span> Ultraviolet Void
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 5: DEVELOPER DOCS & ENV -->
+        <div id="admin-tab-developer" class="hidden space-y-4">
+          <div class="glass-card p-4 rounded-xl font-mono text-xs text-gray-300 overflow-x-auto space-y-2">
+            <p class="text-cyber-neon font-bold"># File Configuration (.env.example)</p>
+            <pre class="bg-black/60 p-3 rounded-lg border border-emerald-900/60">
+PORT=3000
+AI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+ADMIN_PASSCODE=260108
+APP_NAME="ALL AI"
+BRAND_OWNER="ALL STORE PROJECT"
+            </pre>
+          </div>
+
+          <div class="glass-card p-4 rounded-xl text-xs space-y-2 text-gray-300">
+            <h4 class="font-bold text-cyber-neon text-sm">Instruksi Deployment Backend Server:</h4>
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>Deploy backend menggunakan Node.js / Express or Next.js API Routes.</li>
+              <li>Simpan <code class="text-cyber-neon">AI_API_KEY</code> di dalam environment variable hosting (Vercel/Render/VPS).</li>
+              <li>Pastikan frontend melakukan fetch ke endpoint proxy backend tanpa mengekspos API Key.</li>
+            </ol>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Watermark Footer inside Admin -->
+      <div class="pt-6 border-t border-emerald-900/40 text-center">
+        <p class="text-xs uppercase font-mono tracking-widest text-cyber-neon font-bold">
+          DEVELOPER BY ALL STORE PROJECT
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let scene, camera, renderer, particles, gridHelper, active3DMeshGroup;
+    let animFrameId = null;
+    let is3DEnabled = true;
+    let currentThemeHex = 0x00ff88;
+    let currentThemeDarkHex = 0x022c22;
+    let current3DMode = localStorage.getItem('all_ai_3d_mode') || 'knot';
+
+    const CYBER_THEMES = {
+      green: { hex: 0x00ff88, dark: 0x022c22, cssClass: '' },
+      pink: { hex: 0xff007f, dark: 0x2c0218, cssClass: 'theme-pink' },
+      cyan: { hex: 0x00f0ff, dark: 0x02232c, cssClass: 'theme-cyan' },
+      amber: { hex: 0xffaa00, dark: 0x2c1a02, cssClass: 'theme-amber' },
+      purple: { hex: 0xa855f7, dark: 0x1d022c, cssClass: 'theme-purple' }
+    };
+
+    function init3DBackground() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 4, 14);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Create 3D Perspective Grid
+      gridHelper = new THREE.GridHelper(70, 40, currentThemeHex, currentThemeDarkHex);
+      gridHelper.position.y = -3.5;
+      scene.add(gridHelper);
+
+      // Group holding dynamic 3D meshes
+      active3DMeshGroup = new THREE.Group();
+      scene.add(active3DMeshGroup);
+
+      // Floating particles
+      const particleCount = 280;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 50;
+        positions[i + 1] = (Math.random() - 0.5) * 35;
+        positions[i + 2] = (Math.random() - 0.5) * 50;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const particleMaterial = new THREE.PointsMaterial({
+        color: currentThemeHex,
+        size: 0.18,
+        transparent: true,
+        opacity: 0.65
+      });
+
+      particles = new THREE.Points(geometry, particleMaterial);
+      scene.add(particles);
+
+      // Load active 3D mode mesh model
+      set3DMode(current3DMode, false);
+
+      // Parallax mouse effect
+      let mouseX = 0, mouseY = 0;
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+      });
+
+      let clock = new THREE.Clock();
+
+      function animate() {
+        if (!is3DEnabled) return;
+        animFrameId = requestAnimationFrame(animate);
+
+        const elapsedTime = clock.getElapsedTime();
+
+        // Move grid
+        const gridSpeed = (current3DMode === 'warp') ? 0.12 : 0.035;
+        gridHelper.position.z += gridSpeed;
+        if (gridHelper.position.z > 1.75) gridHelper.position.z = 0;
+
+        // Animate Active 3D Group Meshes
+        if (active3DMeshGroup) {
+          if (current3DMode === 'knot') {
+            active3DMeshGroup.children.forEach((child, idx) => {
+              child.rotation.x = elapsedTime * (idx === 0 ? 0.4 : -0.5);
+              child.rotation.y = elapsedTime * (idx === 0 ? 0.6 : -0.7);
+              child.position.y = Math.sin(elapsedTime * 1.5) * 0.3 + 0.5;
+            });
+          } else if (current3DMode === 'sphere') {
+            active3DMeshGroup.children.forEach((child, idx) => {
+              if (idx === 0) child.rotation.y = elapsedTime * 0.3;
+              if (idx === 1) child.rotation.z = elapsedTime * 0.8;
+              if (idx === 2) child.rotation.x = elapsedTime * 0.6;
+            });
+          } else if (current3DMode === 'cubes') {
+            active3DMeshGroup.children.forEach((cube) => {
+              cube.rotation.x += 0.01;
+              cube.rotation.y += 0.015;
+            });
+          } else if (current3DMode === 'warp') {
+            const tunnel = active3DMeshGroup.children[0];
+            if (tunnel) tunnel.rotation.z = elapsedTime * 0.5;
+          }
+        }
+
+        // Particle dynamics
+        if (current3DMode === 'warp') {
+          const posArr = particles.geometry.attributes.position.array;
+          for (let i = 2; i < posArr.length; i += 3) {
+            posArr[i] += 0.35;
+            if (posArr[i] > 10) posArr[i] = -40;
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+        } else {
+          particles.rotation.y += 0.0015;
+        }
+
+        // Smooth camera tilt
+        camera.position.x += (mouseX * 6 - camera.position.x) * 0.05;
+        camera.position.y += (-mouseY * 4 + 4 - camera.position.y) * 0.05;
+        camera.lookAt(0, 0, -2);
+
+        renderer.render(scene, camera);
+      }
+
+      // Check reduce motion preference
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        is3DEnabled = false;
+        container.style.display = 'none';
+      } else {
+        animate();
+      }
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    function set3DMode(modeName, playSound = true) {
+      if (playSound && typeof cyberAudio !== 'undefined') cyberAudio.playClick();
+      current3DMode = modeName || 'knot';
+      localStorage.setItem('all_ai_3d_mode', current3DMode);
+
+      if (!active3DMeshGroup) return;
+
+      // Clear existing children objects
+      while (active3DMeshGroup.children.length > 0) {
+        const obj = active3DMeshGroup.children[0];
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+        active3DMeshGroup.remove(obj);
+      }
+
+      const mat = new THREE.MeshBasicMaterial({
+        color: currentThemeHex,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.35
+      });
+
+      if (current3DMode === 'knot') {
+        const knotGeom = new THREE.TorusKnotGeometry(2.2, 0.6, 100, 16);
+        const knot = new THREE.Mesh(knotGeom, mat);
+        knot.position.set(0, 0.5, -5);
+        active3DMeshGroup.add(knot);
+
+        const innerGeom = new THREE.IcosahedronGeometry(1.2, 2);
+        const innerMat = new THREE.MeshBasicMaterial({
+          color: currentThemeHex,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.25
+        });
+        const innerWire = new THREE.Mesh(innerGeom, innerMat);
+        innerWire.position.set(0, 0.5, -5);
+        active3DMeshGroup.add(innerWire);
+
+      } else if (current3DMode === 'sphere') {
+        const sphereGeom = new THREE.IcosahedronGeometry(2.5, 3);
+        const sphere = new THREE.Mesh(sphereGeom, mat);
+        sphere.position.set(0, 0.5, -5);
+        active3DMeshGroup.add(sphere);
+
+        const ringGeom1 = new THREE.TorusGeometry(3.6, 0.05, 16, 100);
+        const ring1 = new THREE.Mesh(ringGeom1, mat);
+        ring1.rotation.x = Math.PI / 3;
+        ring1.position.set(0, 0.5, -5);
+        active3DMeshGroup.add(ring1);
+
+        const ringGeom2 = new THREE.TorusGeometry(4.2, 0.05, 16, 100);
+        const ring2 = new THREE.Mesh(ringGeom2, mat);
+        ring2.rotation.y = Math.PI / 4;
+        ring2.position.set(0, 0.5, -5);
+        active3DMeshGroup.add(ring2);
+
+      } else if (current3DMode === 'cubes') {
+        const cubeGeom = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+        for (let i = 0; i < 10; i++) {
+          const cubeMat = new THREE.MeshBasicMaterial({
+            color: currentThemeHex,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.4
+          });
+          const cube = new THREE.Mesh(cubeGeom, cubeMat);
+          const angle = (i / 10) * Math.PI * 2;
+          const radius = 4.5;
+          cube.position.set(
+            Math.cos(angle) * radius,
+            Math.sin(angle * 2) * 1.5 + 0.5,
+            Math.sin(angle) * radius - 5
+          );
+          active3DMeshGroup.add(cube);
+        }
+
+      } else if (current3DMode === 'warp') {
+        const tunnelGeom = new THREE.CylinderGeometry(4.5, 4.5, 25, 24, 12, true);
+        const tunnelMat = new THREE.MeshBasicMaterial({
+          color: currentThemeHex,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.25
+        });
+        const tunnel = new THREE.Mesh(tunnelGeom, tunnelMat);
+        tunnel.rotation.x = Math.PI / 2;
+        tunnel.position.set(0, 0, -10);
+        active3DMeshGroup.add(tunnel);
+      }
+
+      const dd = document.getElementById('theme-dropdown');
+      if (dd) dd.classList.add('hidden');
+    }
+
+    function update3DThemeColors(hex, darkHex) {
+      currentThemeHex = hex;
+      currentThemeDarkHex = darkHex;
+
+      if (gridHelper && scene) {
+        scene.remove(gridHelper);
+        gridHelper = new THREE.GridHelper(70, 40, hex, darkHex);
+        gridHelper.position.y = -3.5;
+        scene.add(gridHelper);
+      }
+
+      if (particles) {
+        particles.material.color.setHex(hex);
+      }
+
+      set3DMode(current3DMode, false);
+    }
+
+    // Web Audio API Synthesizer Sound Engine
+    class CyberAudioEngine {
+      constructor() {
+        this.enabled = false;
+        this.ctx = null;
+      }
+
+      initCtx() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playClick() {
+        if (!this.enabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      }
+
+      playSendMsg() {
+        if (!this.enabled) return;
+        this.initCtx();
+        if (!this.ctx) return;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      }
+    }
+
+    const cyberAudio = new CyberAudioEngine();
+
+    class ApplicationController {
+      constructor() {
+        this.adminPasscode = "260108";
+        this.activeTheme = "green";
+        this.config = {
+          aiName: "ALL AI",
+          aiDesc: "Your Smart WhatsApp Assistant",
+          aiAvatar: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80",
+          systemPrompt: "You are ALL AI, a smart, polite, futuristic WhatsApp AI Assistant created by ALL STORE PROJECT. Help users effectively.",
+          apiKey: "",
+          adminPasscode: "260108",
+          aiModel: "gemini-3-flash-preview",
+          socials: {
+            whatsapp: "https://wa.me/6281234567890",
+            instagram: "https://instagram.com/allstoreproject",
+            telegram: "https://t.me/allstoreproject",
+            github: "https://github.com/allstoreproject",
+            tiktok: "https://tiktok.com/@allstoreproject",
+            website: "https://allstoreproject.com"
+          }
+        };
+
+        // Load saved config if exists
+        const savedConfig = localStorage.getItem('all_ai_config');
+        if (savedConfig) {
+          try {
+            this.config = { ...this.config, ...JSON.parse(savedConfig) };
+            if (this.config.adminPasscode) {
+              this.adminPasscode = this.config.adminPasscode;
+            }
+          } catch(e) {}
+        }
+
+        this.conversations = JSON.parse(localStorage.getItem('all_ai_conversations') || '[]');
+        this.currentChatId = null;
+        this.isProcessing = false;
+
+        this.init();
+      }
+
+      init() {
+        marked.setOptions({
+          highlight: function(code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+              return hljs.highlight(code, { language: lang }).value;
+            }
+            return hljs.highlightAuto(code).value;
+          },
+          breaks: true
+        });
+
+        if (this.conversations.length === 0) {
+          this.createNewChat(false);
+        } else {
+          this.currentChatId = this.conversations[0].id;
+        }
+
+        this.renderHistoryList();
+        this.updateStats();
+        this.renderSocialLinks();
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('all_ai_theme') || 'green';
+        this.setCyberTheme(savedTheme, false);
+      }
+
+      saveConfig() {
+        localStorage.setItem('all_ai_config', JSON.stringify(this.config));
+      }
+
+      openSocialsModal() {
+        cyberAudio.playClick();
+        this.renderSocialLinks();
+        document.getElementById('modal-developer-socials').classList.remove('hidden');
+      }
+
+      closeSocialsModal() {
+        cyberAudio.playClick();
+        document.getElementById('modal-developer-socials').classList.add('hidden');
+      }
+
+      renderSocialLinks() {
+        const modalContainer = document.getElementById('social-modal-links-container');
+        const landingContainer = document.getElementById('landing-social-links');
+        const soc = this.config.socials || {};
+
+        const items = [
+          { key: 'whatsapp', label: 'WhatsApp', icon: 'fa-brands fa-whatsapp', color: 'text-emerald-400 border-emerald-800/60 hover:bg-emerald-950/80', url: soc.whatsapp },
+          { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram', color: 'text-pink-400 border-pink-800/60 hover:bg-pink-950/80', url: soc.instagram },
+          { key: 'telegram', label: 'Telegram', icon: 'fa-brands fa-telegram', color: 'text-cyan-400 border-cyan-800/60 hover:bg-cyan-950/80', url: soc.telegram },
+          { key: 'github', label: 'GitHub', icon: 'fa-brands fa-github', color: 'text-purple-400 border-purple-800/60 hover:bg-purple-950/80', url: soc.github },
+          { key: 'tiktok', label: 'TikTok', icon: 'fa-brands fa-tiktok', color: 'text-white border-gray-700 hover:bg-gray-900', url: soc.tiktok },
+          { key: 'website', label: 'Website', icon: 'fa-solid fa-globe', color: 'text-cyber-neon border-emerald-800/60 hover:bg-emerald-950/80', url: soc.website }
+        ];
+
+        // Render Modal Links
+        if (modalContainer) {
+          modalContainer.innerHTML = items.map(item => `
+            <a href="${item.url || '#'}" target="_blank" rel="noopener noreferrer" onclick="cyberAudio.playClick()" class="p-3 rounded-xl border glass-card ${item.color} flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <i class="${item.icon} text-lg"></i>
+                <span class="text-xs font-semibold text-gray-200 group-hover:text-white">${item.label}</span>
+              </div>
+              <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-60 group-hover:opacity-100"></i>
+            </a>
+          `).join('');
+        }
+
+        // Render Landing Bar Icons
+        if (landingContainer) {
+          landingContainer.innerHTML = items.map(item => `
+            <a href="${item.url || '#'}" target="_blank" rel="noopener noreferrer" title="${item.label}" onclick="cyberAudio.playClick()" class="p-2 rounded-lg bg-emerald-950/60 border border-cyber-neon/30 ${item.color} hover:scale-110 transition text-sm">
+              <i class="${item.icon}"></i>
+            </a>
+          `).join('');
+        }
+
+        // Populate input values in Admin Panel
+        const waIn = document.getElementById('input-soc-wa');
+        const igIn = document.getElementById('input-soc-ig');
+        const tgIn = document.getElementById('input-soc-tg');
+        const ghIn = document.getElementById('input-soc-gh');
+        const ttIn = document.getElementById('input-soc-tt');
+        const webIn = document.getElementById('input-soc-web');
+
+        if (waIn) waIn.value = soc.whatsapp || '';
+        if (igIn) igIn.value = soc.instagram || '';
+        if (tgIn) tgIn.value = soc.telegram || '';
+        if (ghIn) ghIn.value = soc.github || '';
+        if (ttIn) ttIn.value = soc.tiktok || '';
+        if (webIn) webIn.value = soc.website || '';
+      }
+
+      toggleThemeDropdown() {
+        cyberAudio.playClick();
+        const dd = document.getElementById('theme-dropdown');
+        if (dd) dd.classList.toggle('hidden');
+      }
+
+      setCyberTheme(themeName, playSound = true) {
+        if (playSound) cyberAudio.playClick();
+        if (!CYBER_THEMES[themeName]) themeName = 'green';
+        this.activeTheme = themeName;
+        localStorage.setItem('all_ai_theme', themeName);
+
+        const themeData = CYBER_THEMES[themeName];
+        
+        // Remove all theme classes
+        document.body.classList.remove('theme-pink', 'theme-cyan', 'theme-amber', 'theme-purple');
+        if (themeData.cssClass) {
+          document.body.classList.add(themeData.cssClass);
+        }
+
+        // Update 3D Canvas colors
+        update3DThemeColors(themeData.hex, themeData.dark);
+
+        // Update dropdown checkboxes
+        ['green', 'pink', 'cyan', 'amber', 'purple'].forEach(t => {
+          const chk = document.querySelector(`.theme-chk-${t}`);
+          if (chk) {
+            chk.style.opacity = (t === themeName) ? '1' : '0';
+          }
+        });
+
+        const dd = document.getElementById('theme-dropdown');
+        if (dd) dd.classList.add('hidden');
+      }
+
+      set3DMode(modeName) {
+        set3DMode(modeName, true);
+      }
+
+      toggleAudioSFX() {
+        cyberAudio.enabled = !cyberAudio.enabled;
+        const btn = document.getElementById('btn-audio-toggle');
+        if (btn) {
+          if (cyberAudio.enabled) {
+            btn.innerHTML = '<i class="fa-solid fa-volume-high text-sm"></i>';
+            btn.classList.add('shadow-[0_0_10px_var(--cyber-glow)]');
+            cyberAudio.playClick();
+          } else {
+            btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-sm"></i>';
+            btn.classList.remove('shadow-[0_0_10px_var(--cyber-glow)]');
+          }
+        }
+      }
+
+      toggleScanlines(enabled) {
+        const scanlines = document.getElementById('scanlines');
+        if (scanlines) scanlines.style.display = enabled ? 'block' : 'none';
+      }
+
+      saveConversations() {
+        localStorage.setItem('all_ai_conversations', JSON.stringify(this.conversations));
+        this.updateStats();
+      }
+
+      updateStats() {
+        const totalConvs = this.conversations.length;
+        const totalMsgs = this.conversations.reduce((acc, c) => acc + c.messages.length, 0);
+        
+        const elConvs = document.getElementById('stat-conversations');
+        const elMsgs = document.getElementById('stat-messages');
+        if (elConvs) elConvs.textContent = totalConvs;
+        if (elMsgs) elMsgs.textContent = totalMsgs;
+      }
+
+      showLandingOrChat() {
+        cyberAudio.playClick();
+        document.getElementById('view-landing').classList.remove('hidden');
+        document.getElementById('view-chat').classList.add('hidden');
+      }
+
+      startChatSession() {
+        cyberAudio.playClick();
+        document.getElementById('view-landing').classList.add('hidden');
+        document.getElementById('view-chat').classList.remove('hidden');
+        this.renderCurrentMessages();
+      }
+
+      toggleSidebar() {
+        cyberAudio.playClick();
+        const sidebar = document.getElementById('chat-sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        sidebar.classList.toggle('-translate-x-full');
+        backdrop.classList.toggle('hidden');
+      }
+
+      createNewChat(switchView = true) {
+        cyberAudio.playClick();
+        const newChat = {
+          id: 'chat_' + Date.now(),
+          title: 'Percakapan Baru',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          messages: []
+        };
+        this.conversations.unshift(newChat);
+        this.currentChatId = newChat.id;
+        this.saveConversations();
+        this.renderHistoryList();
+        
+        if (switchView) {
+          this.startChatSession();
+        }
+      }
+
+      selectChat(id) {
+        cyberAudio.playClick();
+        this.currentChatId = id;
+        this.renderHistoryList();
+        this.renderCurrentMessages();
+        if (window.innerWidth < 1024) {
+          this.toggleSidebar();
+        }
+      }
+
+      clearCurrentChat() {
+        cyberAudio.playClick();
+        const chat = this.conversations.find(c => c.id === this.currentChatId);
+        if (chat) {
+          chat.messages = [];
+          this.saveConversations();
+          this.renderCurrentMessages();
+        }
+      }
+
+      renderHistoryList() {
+        const list = document.getElementById('chat-history-list');
+        if (!list) return;
+
+        list.innerHTML = this.conversations.map(chat => {
+          const isActive = chat.id === this.currentChatId;
+          const activeClass = isActive 
+            ? 'bg-emerald-950/80 border-cyber-neon/50 text-cyber-neon shadow-[0_0_10px_rgba(0,255,136,0.15)]' 
+            : 'text-gray-400 hover:bg-emerald-950/30 hover:text-white border-transparent';
+
+          return `
+            <div onclick="app.selectChat('${chat.id}')" class="group p-2.5 rounded-xl border ${activeClass} cursor-pointer text-xs flex items-center justify-between transition">
+              <div class="flex items-center space-x-2 truncate">
+                <i class="fa-regular fa-comment-dots text-cyber-neon"></i>
+                <span class="truncate max-w-[140px] font-medium">${chat.title}</span>
+              </div>
+              <button onclick="event.stopPropagation(); app.deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      deleteChat(id) {
+        cyberAudio.playClick();
+        this.conversations = this.conversations.filter(c => c.id !== id);
+        if (this.conversations.length === 0) {
+          this.createNewChat(false);
+        } else if (this.currentChatId === id) {
+          this.currentChatId = this.conversations[0].id;
+        }
+        this.saveConversations();
+        this.renderHistoryList();
+        this.renderCurrentMessages();
+      }
+
+      renderCurrentMessages() {
+        const container = document.getElementById('messages-container');
+        const chat = this.conversations.find(c => c.id === this.currentChatId);
+
+        if (!chat || chat.messages.length === 0) {
+          container.innerHTML = `
+            <div id="welcome-screen" class="max-w-xl mx-auto my-8 p-6 rounded-2xl glass-card cyber-hud-box text-center space-y-4">
+              <div class="w-16 h-16 mx-auto rounded-full bg-emerald-950 border border-cyber-neon/50 flex items-center justify-center text-cyber-neon text-2xl shadow-[0_0_20px_var(--cyber-glow)]">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <h2 class="text-xl font-bold text-white">Hello 👋, I'm <span class="text-cyber-neon">${this.config.aiName}</span></h2>
+              <p class="text-xs sm:text-sm text-gray-300">
+                ${this.config.aiDesc}. Silakan ketik pertanyaan Anda di bawah:
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left pt-2">
+                <button onclick="app.useSuggestion('💻 Bantu saya membuat script HTML & CSS')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span>💻</span> <span>Bantu buat script HTML/CSS</span>
+                </button>
+                <button onclick="app.useSuggestion('🧠 Jelaskan cara kerja AI secara sederhana')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span>🧠</span> <span>Penjelasan konsep AI</span>
+                </button>
+                <button onclick="app.useSuggestion('✍️ Tuliskan draf pesan WhatsApp promosi')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span>✍️</span> <span>Draf pesan promosi WA</span>
+                </button>
+                <button onclick="app.useSuggestion('📚 Tips belajar matematika cepat')" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 hover:border-cyber-neon text-xs text-gray-200 hover:text-cyber-neon transition flex items-start space-x-2">
+                  <span>📚</span> <span>Tips belajar logika</span>
+                </button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = chat.messages.map((msg, index) => {
+          const isUser = msg.role === 'user';
+          
+          if (isUser) {
+            return `
+              <div class="flex justify-end mb-4">
+                <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tr-none bg-emerald-900/40 border border-cyber-neon/40 p-3.5 text-sm text-white shadow-[0_0_15px_var(--cyber-glow)]">
+                  <p class="whitespace-pre-wrap">${this.escapeHtml(msg.content)}</p>
+                  <span class="block text-[10px] text-cyber-neon/70 text-right mt-1">${msg.time}</span>
+                </div>
+              </div>
+            `;
+          } else {
+            const htmlContent = marked.parse(msg.content);
+            return `
+              <div class="flex justify-start mb-4">
+                <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tl-none glass-card p-4 text-sm text-gray-100 border-emerald-800/50">
+                  <div class="flex items-center space-x-2 mb-2 pb-2 border-b border-emerald-900/40">
+                    <span class="font-bold text-xs text-cyber-neon">${this.config.aiName}</span>
+                    <span class="text-[10px] text-gray-500">${msg.time}</span>
+                  </div>
+                  <div class="markdown-content text-xs sm:text-sm leading-relaxed">${htmlContent}</div>
+                  
+                  <div class="flex items-center space-x-3 mt-3 pt-2 border-t border-emerald-900/30 text-xs">
+                    <button onclick="app.copyText(this, \`${this.escapeQuote(msg.content)}\`)" class="text-gray-400 hover:text-cyber-neon transition flex items-center space-x-1">
+                      <i class="fa-regular fa-copy"></i>
+                      <span>Copy</span>
+                    </button>
+                    <button onclick="app.regenerateResponse(${index})" class="text-gray-400 hover:text-cyber-neon transition flex items-center space-x-1">
+                      <i class="fa-solid fa-arrows-rotate"></i>
+                      <span>Regenerate</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+
+        this.scrollToBottom();
+        this.addCopyCodeButtons();
+      }
+
+      addCopyCodeButtons() {
+        document.querySelectorAll('.markdown-content pre').forEach(pre => {
+          if (pre.querySelector('.btn-copy-code')) return;
+          const btn = document.createElement('button');
+          btn.className = 'btn-copy-code absolute top-2 right-2 px-2 py-1 rounded bg-emerald-950 border border-cyber-neon/40 text-[10px] text-cyber-neon hover:bg-cyber-neon hover:text-black font-mono transition';
+          btn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>COPY CODE';
+          btn.onclick = () => {
+            cyberAudio.playClick();
+            const code = pre.querySelector('code')?.innerText || pre.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+              btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Copied ✓';
+              setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>COPY CODE';
+              }, 2000);
+            });
+          };
+          pre.style.position = 'relative';
+          pre.appendChild(btn);
+        });
+      }
+
+      useSuggestion(text) {
+        document.getElementById('chat-input').value = text;
+        this.handleSendMessage();
+      }
+
+      handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.handleSendMessage();
+        }
+      }
+
+      async handleSendMessage(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text || this.isProcessing) return;
+
+        cyberAudio.playSendMsg();
+
+        input.value = '';
+        input.style.height = 'auto';
+
+        const chat = this.conversations.find(c => c.id === this.currentChatId);
+        if (!chat) return;
+
+        if (chat.messages.length === 0) {
+          chat.title = text.slice(0, 24) + '...';
+          this.renderHistoryList();
+        }
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // Add user message
+        chat.messages.push({
+          role: 'user',
+          content: text,
+          time: timeStr
+        });
+
+        this.renderCurrentMessages();
+        this.saveConversations();
+
+        await this.fetchAIResponse(chat);
+      }
+
+      async fetchAIResponse(chat) {
+        this.isProcessing = true;
+        this.showTypingIndicator(true);
+
+        try {
+          // Prepare conversation payload for Gemini API
+          const formattedContents = chat.messages.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          }));
+
+          const payload = {
+            contents: formattedContents,
+            systemInstruction: {
+              parts: [{ text: this.config.systemPrompt }]
+            }
+          };
+
+          const apiKey = this.config.apiKey || "";
+          const modelName = this.config.aiModel || "gemini-3-flash-preview";
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await response.json();
+
+          if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            const aiText = data.candidates[0].content.parts[0].text;
+            chat.messages.push({
+              role: 'assistant',
+              content: aiText,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+          } else {
+            throw new Error('Response API tidak valid');
+          }
+
+        } catch (err) {
+          console.error(err);
+          chat.messages.push({
+            role: 'assistant',
+            content: '⚠️ AI sedang mengalami gangguan. Silakan coba lagi nanti atau periksa koneksi backend.',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          });
+        } finally {
+          this.isProcessing = false;
+          this.showTypingIndicator(false);
+          this.renderCurrentMessages();
+          this.saveConversations();
+        }
+      }
+
+      async regenerateResponse(msgIndex) {
+        cyberAudio.playClick();
+        const chat = this.conversations.find(c => c.id === this.currentChatId);
+        if (!chat || this.isProcessing) return;
+
+        // Truncate messages back to the prompt
+        chat.messages = chat.messages.slice(0, msgIndex);
+        this.renderCurrentMessages();
+        this.saveConversations();
+        await this.fetchAIResponse(chat);
+      }
+
+      showTypingIndicator(show) {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+          if (show) indicator.classList.remove('hidden');
+          else indicator.classList.add('hidden');
+        }
+        this.scrollToBottom();
+      }
+
+      scrollToBottom() {
+        const container = document.getElementById('messages-container');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+
+      copyText(btn, text) {
+        cyberAudio.playClick();
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-check text-cyber-neon"></i><span>Copied ✓</span>';
+          setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+      }
+
+      /* ADMIN AUTH & DASHBOARD LOGIC */
+      openAdminAuthModal() {
+        cyberAudio.playClick();
+        const modal = document.getElementById('modal-admin-auth');
+        const errDiv = document.getElementById('admin-auth-error');
+        const pinInput = document.getElementById('admin-passcode');
+        if (pinInput) pinInput.value = '';
+        if (modal) modal.classList.remove('hidden');
+        if (errDiv) errDiv.classList.add('hidden');
+      }
+
+      closeAdminAuthModal() {
+        cyberAudio.playClick();
+        const modal = document.getElementById('modal-admin-auth');
+        const pinInput = document.getElementById('admin-passcode');
+        if (pinInput) pinInput.value = '';
+        if (modal) modal.classList.add('hidden');
+      }
+
+      verifyAdminPasscode() {
+        cyberAudio.playClick();
+        const pinInput = document.getElementById('admin-passcode');
+        const input = pinInput ? pinInput.value : '';
+        const errDiv = document.getElementById('admin-auth-error');
+
+        // Langsung hapus jejak angka PIN dari input field
+        if (pinInput) pinInput.value = '';
+
+        if (input === this.adminPasscode) {
+          this.closeAdminAuthModal();
+          this.openAdminDashboard();
+        } else {
+          errDiv.textContent = "Passcode Admin salah. Silakan coba lagi.";
+          errDiv.classList.remove('hidden');
+        }
+      }
+
+      openAdminDashboard() {
+        document.getElementById('modal-admin-dashboard').classList.remove('hidden');
+      }
+
+      closeAdminDashboard() {
+        cyberAudio.playClick();
+        document.getElementById('modal-admin-dashboard').classList.add('hidden');
+      }
+
+      switchAdminTab(tabName) {
+        cyberAudio.playClick();
+        ['overview', 'ai', 'profile', 'appearance', 'developer'].forEach(t => {
+          const btn = document.getElementById(`tab-btn-${t}`);
+          const content = document.getElementById(`admin-tab-${t}`);
+          if (t === tabName) {
+            btn.className = 'pb-2 border-b-2 border-cyber-neon text-cyber-neon px-1 whitespace-nowrap';
+            content.classList.remove('hidden');
+          } else {
+            btn.className = 'pb-2 border-b-2 border-transparent text-gray-400 hover:text-cyber-neon px-1 whitespace-nowrap';
+            content.classList.add('hidden');
+          }
+        });
+      }
+
+      saveAISettings() {
+        cyberAudio.playClick();
+        const newPass = document.getElementById('input-new-passcode').value.trim();
+        if (newPass) {
+          this.adminPasscode = newPass;
+          this.config.adminPasscode = newPass;
+          document.getElementById('input-new-passcode').value = '';
+        }
+
+        this.config.apiKey = document.getElementById('input-api-key').value;
+        this.config.aiModel = document.getElementById('input-ai-model').value;
+        this.config.systemPrompt = document.getElementById('input-system-prompt').value;
+        this.saveConfig();
+        alert("Pengaturan AI & Keamanan Berhasil Disimpan!");
+      }
+
+      saveProfileSettings() {
+        cyberAudio.playClick();
+        this.config.aiName = document.getElementById('input-ai-name').value;
+        this.config.aiDesc = document.getElementById('input-ai-desc').value;
+        this.config.aiAvatar = document.getElementById('input-ai-avatar').value;
+
+        // Save Social Media Links
+        this.config.socials = {
+          whatsapp: document.getElementById('input-soc-wa').value,
+          instagram: document.getElementById('input-soc-ig').value,
+          telegram: document.getElementById('input-soc-tg').value,
+          github: document.getElementById('input-soc-gh').value,
+          tiktok: document.getElementById('input-soc-tt').value,
+          website: document.getElementById('input-soc-web').value
+        };
+
+        this.saveConfig();
+
+        // Update UI Header
+        document.getElementById('header-name').textContent = this.config.aiName;
+        document.getElementById('header-desc').textContent = this.config.aiDesc;
+        document.getElementById('header-avatar').src = this.config.aiAvatar;
+        
+        const landingAvatar = document.getElementById('landing-avatar');
+        if (landingAvatar) landingAvatar.src = this.config.aiAvatar;
+
+        this.renderSocialLinks();
+        this.renderCurrentMessages();
+        alert("Profil AI & Social Media Berhasil Diperbarui!");
+      }
+
+      toggle3DBackground(enabled) {
+        cyberAudio.playClick();
+        is3DEnabled = enabled;
+        const container = document.getElementById('canvas-container');
+        container.style.display = enabled ? 'block' : 'none';
+      }
+
+      escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+
+      escapeQuote(str) {
+        return str.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      }
+    }
+
+    // Initialize application on window load
+    let app;
+    window.onload = function () {
+      init3DBackground();
+      app = new ApplicationController();
+    };
+  </script>
+</body>
+</html>
